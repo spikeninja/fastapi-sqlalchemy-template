@@ -2,7 +2,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class UsersCreate(BaseModel):
+class UserCreate(BaseModel):
     id: str
     email: str
     username: str
@@ -10,7 +10,7 @@ class UsersCreate(BaseModel):
     created_date: datetime
 
 
-class UsersGet(BaseModel):
+class UserGet(BaseModel):
     id: str
     email: str
     username: str

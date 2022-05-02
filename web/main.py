@@ -3,10 +3,20 @@ import time
 import random
 import string
 
-from fastapi import FastAPI, Request, HTTPException
 from loguru import logger
+from fastapi import FastAPI, Request
+
+from endpoints import auth, users
+from db.base import metadata, __async_engine
 
 app = FastAPI()
+
+app.include_router(users.router,
+                   prefix="/users",
+                   tags=["users"])
+app.include_router(auth.router,
+                   prefix="/auth",
+                   tags=["auth"])
 
 
 @app.middleware("http")
@@ -59,7 +69,7 @@ async def startup_event():
         rotation="100 MB"
     )
 
+    async with __async_engine.begin() as conn:
+        await conn.run_sync(metadata.create_all)
 
-@app.get("/")
-def index():
-    return {"ping": "pong"}
+
