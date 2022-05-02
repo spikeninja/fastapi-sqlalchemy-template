@@ -18,7 +18,8 @@ class Database:
         async with self.__get_session() as session:
             async with session.begin():
                 result = await session.execute(query, values)
-                return result.fetchone()
+
+        return result.fetchone()
 
     async def fetch_all(self,
                         query,
@@ -26,7 +27,8 @@ class Database:
         async with self.__get_session() as session:
             async with session.begin():
                 result = await session.execute(query, values)
-                return result.fetchall()
+
+        return result.fetchall()
 
     async def fetch_val(self,
                         query,
@@ -34,11 +36,14 @@ class Database:
                         column: Any = 0):
         # need to be fixed
         async with self.__get_session() as session:
-            return await session.fetch_val(query, values, column=column)
+            value = await session.fetch_val(query, values, column=column)
+
+        return value
 
     async def execute(self,
                       query):
         async with self.__get_session() as session:
             async with session.begin():
                 result = await session.execute(query)
-                return result
+
+        return result
