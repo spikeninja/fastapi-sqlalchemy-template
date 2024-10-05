@@ -1,0 +1,48 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: PROJECT_NAME_web_dev
+    command: uv run uvicorn main:application_factory --reload --workers 1 --host 0.0.0.0 --port 8000
+    volumes:
+      - ./web/:/usr/src/app/
+    env_file:
+      - .env
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+      - postgres_db
+
+  queue:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    container_name: PROJECT_NAME_queue_dev
+    command: uv run taskiq worker app.tasks.broker:broker -tp '**/tasks/tasks.py' -fsd
+    volumes:
+      - ./web/:/usr/src/app/
+      - ./files/:/usr/files/
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: PROJECT_NAME_redis_dev
+    volumes:
+      - redis_data:/data
+
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: PROJECT_NAME_pgsql_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+volumes:
+  redis_data:
+  postgres_data:
