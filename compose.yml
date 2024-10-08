@@ -1,7 +1,8 @@
 services:
   web:
     build:
-      context: docker/prod
+      context: .
+      dockerfile: ./docker/Dockerfile
     container_name: PROJECT_NAME_api_prod
     command: uv run uvicorn main:application_factory --workers 1 --host 0.0.0.0 --port 8001
     env_file:
@@ -34,8 +35,8 @@ services:
 
   postgres_db:
     build:
-      context: docker/prod
-      dockerfile: Postgres.Dockerfile
+      context: .
+      dockerfile: ./docker/Dockerfile
     image: postgres:17-alpine
     container_name: PROJECT_NAME_pgsql_prod
     volumes:
