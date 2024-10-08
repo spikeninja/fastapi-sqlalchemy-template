@@ -34,9 +34,6 @@ services:
       - redis_data:/data
 
   postgres_db:
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile
     image: postgres:17-alpine
     container_name: PROJECT_NAME_pgsql_prod
     volumes:
