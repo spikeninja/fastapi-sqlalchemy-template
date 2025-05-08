@@ -1,0 +1,31 @@
+{
+	log {
+		output file /var/log/caddy/general-log.log {
+			roll_size 50mb
+			roll_keep 20
+			roll_keep_for 720h
+		}
+		format json
+		level DEBUG
+	}
+}
+
+api.yourdomain.com {
+	tls youremail@gmail.com
+
+	reverse_proxy localhost:8001 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+	}
+}
+
+# SPA app
+app.yourdomain.com {
+	tls youremail@gmail.com
+
+	try_files {path} /index.html
+	encode gzip
+	# root * /home/admin/dev/frontend/dist
+	root * /home/admin/actions-runner/_work/frontend/frontend/dist
+	file_server
+}

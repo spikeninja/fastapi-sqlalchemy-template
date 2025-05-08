@@ -1,15 +1,17 @@
-from datetime import datetime
-
 import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import UsersModel
+from app.utils.functions import utcnow
 from app.core.security import hash_password
-from app.repositories.base import BaseRepository
 
 
-class UsersRepository(BaseRepository):
+class UsersRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
     async def create(self, name: str, email: str, password: str) -> UsersModel:
-        """Creates a new user"""
+        """"""
 
         hashed_password = await hash_password(password=password)
 
@@ -26,42 +28,39 @@ class UsersRepository(BaseRepository):
         return user
 
     async def get_by_id(self, _id: int) -> UsersModel | None:
-        """Returns a user by their id"""
+        """"""
 
         query = sa.select(UsersModel).where(UsersModel.id == _id)
 
         return await self.session.scalar(query)
 
     async def get_by_email(self, email: str) -> UsersModel:
-        """Return a user by their email"""
+        """"""
 
         query = sa.select(UsersModel).where(UsersModel.email == email)
 
         return await self.session.scalar(query)
 
     async def get_all(self, limit: int | None, offset: int | None) -> list[UsersModel]:
-        """Returns all users"""
+        """"""
 
-        query = (
-            sa.select(UsersModel)
-            .limit(limit)
-            .offset(offset)
-        )
+        query = sa.select(UsersModel).limit(limit).offset(offset)
+        results = await self.session.scalars(query)
 
-        return list(await self.session.scalars(query))
+        return list(results.all())
 
     async def update(self, _id: int, values: dict):
-        """Updates a user by their id"""
-
-        now_ = datetime.utcnow()
+        """"""
 
         query = (
             sa.update(UsersModel)
             .where(UsersModel.id == _id)
-            .values({
-                **values,
-                UsersModel.updated_at: now_,
-            })
+            .values(
+                {
+                    **values,
+                    UsersModel.updated_at: utcnow(),
+                }
+            )
         )
 
         await self.session.execute(query)
@@ -70,11 +69,9 @@ class UsersRepository(BaseRepository):
     async def delete(self, _id: int):
         """Deletes a user by their id"""
 
-        now_ = datetime.utcnow()
-
         query = (
             sa.update(UsersModel)
-            .values({UsersModel.deleted_at: now_})
+            .values({UsersModel.deleted_at: utcnow()})
             .where(UsersModel.id == _id)
         )
 

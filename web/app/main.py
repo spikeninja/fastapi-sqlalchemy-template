@@ -1,4 +1,3 @@
-import uvicorn
 from fastapi import FastAPI
 from dishka import make_async_container
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +13,7 @@ def application_factory() -> FastAPI:
 
     app = FastAPI(lifespan=lifespan)
 
-    # In dev purposes
+    # todo: dev only
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -26,13 +25,17 @@ def application_factory() -> FastAPI:
     app.include_router(auth.router, prefix="/api", tags=["auth"])
     app.include_router(users.router, prefix="/api", tags=["users"])
 
-    container = make_async_container(AppProvider())
-    setup_dishka(app=app, container=container)
-
     return app
 
 
-app = application_factory()
+def setup_app():
+    """"""
+    app_ = application_factory()
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="localhost", port=8001, reload=True)
+    container = make_async_container(AppProvider())
+    setup_dishka(app=app_, container=container)
+
+    return app_
+
+
+app = application_factory()

@@ -4,13 +4,14 @@ from sqlalchemy import String, Index, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.resources import Base
+from app.utils.functions import utcnow
 
 
 class UsersModel(Base):
     __tablename__ = "users"
 
     __table_args__ = (
-        # for soft-delete mechanism
+        # soft-delete
         Index(
             "idx_users__email__deleted_at",
             "email",
@@ -20,8 +21,8 @@ class UsersModel(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow)
 
     deleted_at: Mapped[datetime | None] = mapped_column(default=None)
 

@@ -3,13 +3,13 @@ from dishka.integrations.taskiq import setup_dishka
 from taskiq_redis import ListQueueBroker, RedisAsyncResultBackend
 
 from app.ioc import AppProvider
-from app.core.config import settings
+from app.core.config import load_config
 
 broker = ListQueueBroker(
-    url=settings.celery_backend_url,
+    url=load_config().celery_backend_url,
 ).with_result_backend(
     RedisAsyncResultBackend(
-        redis_url=settings.celery_backend_url,
+        redis_url=load_config().celery_backend_url,
     )
 )
 

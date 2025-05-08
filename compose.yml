@@ -1,3 +1,10 @@
+name: PROJECT_NAME-prod
+
+x-logging: &logging-opts
+  options:
+    max-size: "100m"
+    max-file: "8"
+
 services:
   web:
     build:
@@ -12,6 +19,11 @@ services:
     depends_on:
       - redis
       - postgres_db
+    logging:
+      <<: *logging-opts
+    networks:
+      - default
+      - monitoring
 
   queue:
     build:
@@ -26,12 +38,28 @@ services:
       - .env
     depends_on:
       - redis
+    logging:
+      <<: *logging-opts
+
+  taskiq_admin:
+    image: ghcr.io/taskiq-python/taskiq-admin:latest
+    container_name: taskiq_admin
+    ports:
+      - 5558:3000
+    env_file:
+      - .env
+    volumes:
+      - ./web/taskiq-admin-data:/usr/database/
+    logging:
+      <<: *logging-opts
 
   redis:
     image: redis:7-alpine
     container_name: PROJECT_NAME_redis_prod
     volumes:
       - redis_data:/data
+    logging:
+      <<: *logging-opts
 
   postgres_db:
     image: postgres:17-alpine
@@ -40,7 +68,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
+    logging:
+      <<: *logging-opts
 
 volumes:
   redis_data:
-  postgres_data: {}
+  postgres_data:

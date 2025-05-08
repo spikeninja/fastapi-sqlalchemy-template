@@ -1,0 +1,46 @@
+services:
+  prometheus:
+    image: docker.io/prom/prometheus:v3.3.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    command: "--config.file=/etc/prometheus/prometheus.yaml"
+    volumes:
+      - ./metrics/prometheus-config.yml:/etc/prometheus/prometheus.yaml:ro
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  grafana:
+    image: docker.io/grafana/grafana-oss:11.6.0
+    container_name: grafana
+    ports:
+      - "3005:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./metrics/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./metrics/loki-config.yml:/etc/loki/local-config.yml
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    external: true
+    name: PROJECT_NAME-prod_monitoring
+
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

@@ -11,19 +11,13 @@ from app.core.config import settings
 async def hash_password(password: str) -> str:
     """Async wrapper for bcrypt operation"""
 
-    return bcrypt.hashpw(
-        password.encode('utf-8'),
-        bcrypt.gensalt()
-    ).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 async def verify_password(password: str, hashed: str) -> bool:
     """"""
 
-    return bcrypt.checkpw(
-        password.encode("utf-8"),
-        hashed.encode("utf-8")
-    )
+    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 
 async def create_access_token(minutes: int, payload: dict) -> str:
@@ -47,7 +41,7 @@ async def decode_access_token(token: str) -> dict:
     return jwt.decode(
         jwt=token,
         key=settings.secret_key,
-        algorithms=[settings.algorithm]
+        algorithms=[settings.algorithm],
     )
 
 
@@ -56,11 +50,12 @@ class JWTBearer(HTTPBearer):
         super(JWTBearer, self).__init__(auto_error=auto_error)
 
     async def __call__(self, request: Request):
-        credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
+        credentials: HTTPAuthorizationCredentials = await super(
+            JWTBearer, self
+        ).__call__(request)
 
         exp = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid auth token."
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth token."
         )
 
         if credentials:
@@ -68,8 +63,7 @@ class JWTBearer(HTTPBearer):
                 token = await decode_access_token(token=credentials.credentials)
             except jwt.PyJWTError as e:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=f"{e}"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail=f"{e}"
                 )
 
             if token is None:
