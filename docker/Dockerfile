@@ -1,28 +1,22 @@
-FROM python:3.12-slim-bullseye AS dependencies
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV VIRTUAL_ENV=/opt/venv
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends build-essential gcc
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  uv sync --locked --no-install-project --no-dev
+COPY . /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+  uv sync --locked --no-dev
 
-RUN pip install --upgrade pip setuptools wheel uv
+FROM python:3.12-slim-bookworm AS production
 
-RUN uv venv $VIRTUAL_ENV
-COPY pyproject.toml uv.lock /usr/src/app/
+COPY --from=builder --chown=app:app /app /app
 
-WORKDIR /usr/src/app/
-RUN uv pip install --requirement pyproject.toml
-#RUN uv sync --frozen --no-dev --no-cache --active
-
-FROM python:3.12-slim-bullseye AS production
-
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-ENV PYTHONPATH=/usr/src
-
-COPY --from=dependencies $VIRTUAL_ENV $VIRTUAL_ENV
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH=/usr/src/
 
 WORKDIR /usr/src/
