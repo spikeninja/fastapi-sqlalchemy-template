@@ -22,8 +22,8 @@ def application_factory() -> FastAPI:
         allow_credentials=True,
     )
 
-    app.include_router(auth.router, prefix="/api", tags=["auth"])
-    app.include_router(users.router, prefix="/api", tags=["users"])
+    app.include_router(auth.router, prefix="/api")
+    app.include_router(users.router, prefix="/api")
 
     return app
 

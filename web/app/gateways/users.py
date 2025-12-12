@@ -6,7 +6,7 @@ from app.utils.functions import utcnow
 from app.core.security import hash_password
 
 
-class UsersRepository:
+class UsersGateway:
     def __init__(self, session: AsyncSession):
         self.session = session
 

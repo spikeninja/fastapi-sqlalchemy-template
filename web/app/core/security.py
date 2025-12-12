@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 
 import jwt
 import bcrypt
-from fastapi import Request, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from app.core.config import settings
+from app.core.config import load_config
+
+settings = load_config()
 
 
 async def hash_password(password: str) -> str:
@@ -43,33 +43,3 @@ async def decode_access_token(token: str) -> dict:
         key=settings.secret_key,
         algorithms=[settings.algorithm],
     )
-
-
-class JWTBearer(HTTPBearer):
-    def __init__(self, auto_error: bool = True):
-        super(JWTBearer, self).__init__(auto_error=auto_error)
-
-    async def __call__(self, request: Request):
-        credentials: HTTPAuthorizationCredentials = await super(
-            JWTBearer, self
-        ).__call__(request)
-
-        exp = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth token."
-        )
-
-        if credentials:
-            try:
-                token = await decode_access_token(token=credentials.credentials)
-            except jwt.PyJWTError as e:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail=f"{e}"
-                )
-
-            if token is None:
-                raise exp
-
-            return credentials.credentials
-
-        else:
-            raise exp

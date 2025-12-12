@@ -1,7 +1,9 @@
+import asyncio
+
 from app.core.config import Config
 from app.tasks.broker import broker
 from app.utils.functions import send_email
-from app.repositories import UsersRepository
+from app.gateways.users import UsersGateway
 from dishka.integrations.taskiq import FromDishka, inject
 
 
@@ -28,9 +30,10 @@ def task_send_email(
 @broker.task
 @inject
 async def task_doing_smth(
-    something: str,
-    users_repo: FromDishka[UsersRepository],
+    param: str,
+    users_gateway: FromDishka[UsersGateway],
 ):
     """"""
-
-    # doing smth
+    print(f"Doing smth with {param}...")
+    await asyncio.sleep(5)
+    print("Done!")

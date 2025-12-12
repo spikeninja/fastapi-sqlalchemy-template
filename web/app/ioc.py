@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.core.config import Config
-from app.repositories import repositories
+from app.gateways import gateways
 from app.services.filte_storage import S3FilesStorage
 
 
@@ -65,8 +65,8 @@ class AppProvider(Provider):
         async with session_maker() as session:
             yield session
 
-    repositories = provide(*repositories, scope=Scope.REQUEST)
-    s3_file_storage = provide(S3FilesStorage, scope=Scope.REQUEST)
+    gateways = provide(*gateways, scope=Scope.REQUEST)
+    s3_file_storage = provide(S3FilesStorage, scope=Scope.APP)
 
 
 class TestProvider(Provider):
@@ -120,8 +120,8 @@ class TestProvider(Provider):
         async with session_maker() as session:
             yield session
 
-    repositories = provide(*repositories, scope=Scope.REQUEST)
-    s3_file_storage = provide(S3FilesStorage, scope=Scope.REQUEST)
+    gateways = provide(*gateways, scope=Scope.REQUEST)
+    s3_file_storage = provide(S3FilesStorage, scope=Scope.APP)
 
 
 AppContainer = make_async_container(AppProvider())

@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 
+from app.gateways.users import UsersGateway
 from app.api.dependencies import get_current_user
-from app.repositories import UsersRepository
 from app.schemas.users import UserPublic, UserUpdateRequest, UserDTO
 
-router = APIRouter(prefix="/users", route_class=DishkaRoute)
+router = APIRouter(
+    prefix="/users",
+    tags=["users"],
+    route_class=DishkaRoute,
+)
 
 
 @router.get("/me", response_model=list[UserPublic])
@@ -18,7 +22,7 @@ async def get_me(current_user: UserDTO = Depends(get_current_user)):
 @router.patch("/me", response_model=UserPublic)
 async def update_me(
     request: UserUpdateRequest,
-    users_repo: FromDishka[UsersRepository],
+    users_repo: FromDishka[UsersGateway],
     current_user: UserDTO = Depends(get_current_user),
 ):
     """"""
@@ -33,8 +37,11 @@ async def update_me(
 async def get_users(
     limit: int,
     offset: int,
-    users_repo: FromDishka[UsersRepository],
+    users_repo: FromDishka[UsersGateway],
 ):
     """"""
 
-    return await users_repo.get_all(limit=limit, offset=offset)
+    return await users_repo.get_all(
+        limit=limit,
+        offset=offset,
+    )

@@ -6,10 +6,10 @@ from app.ioc import AppProvider
 from app.core.config import load_config
 
 broker = ListQueueBroker(
-    url=load_config().celery_backend_url,
+    url=load_config().broker_url,
 ).with_result_backend(
     RedisAsyncResultBackend(
-        redis_url=load_config().celery_backend_url,
+        redis_url=load_config().backend_url,
     )
 )
 
