@@ -10,7 +10,8 @@ async def get_users_repo() -> AsyncGenerator[UsersRepository, None]:
     """"""
 
     async with AppContainer(scope=Scope.REQUEST) as container:
-        yield container.get(UsersRepository)
+        users_repo = await container.get(UsersRepository)
+        yield users_repo
 
 
 async def get_current_user(
