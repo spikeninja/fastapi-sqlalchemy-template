@@ -1,5 +1,4 @@
 import os
-import uuid
 from typing import AsyncGenerator
 
 import pytest
@@ -11,11 +10,11 @@ from dishka.integrations.fastapi import setup_dishka
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 from dishka import make_async_container, AsyncContainer, Scope
 
-from app.db.models import Base
 from app.ioc import TestProvider
 from app.utils.functions import utcnow
 from app.utils.fastapi import lifespan
 from app.schemas.users import UserDTO
+from app.db.base import MAPPER_REGISTRY
 from app.main import application_factory
 from app.api.dependencies import get_current_user
 from app.core.config import load_config, Config
@@ -67,7 +66,7 @@ async def container(config: Config) -> AsyncGenerator[AsyncContainer, None]:
 
     engine = await container.get(AsyncEngine)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(MAPPER_REGISTRY.metadata.create_all)
 
     yield container
     await container.close()

@@ -1,7 +1,11 @@
+from typing import Any
+from uuid import uuid4
+
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import UsersModel
+from app.domain.users import User
+from app.db.tables import users_table
 from app.utils.functions import utcnow
 from app.core.security import hash_password
 
@@ -10,55 +14,85 @@ class UsersGateway:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, name: str, email: str, password: str) -> UsersModel:
+    def _map_user(self, row: Any) -> User:
+        return User(
+            id=row.id,
+            name=row.name,
+            email=row.email,
+            hashed_password=row.hashed_password,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+            deleted_at=row.deleted_at,
+        )
+
+    async def create(
+        self,
+        name: str,
+        email: str,
+        password: str,
+    ) -> User:
         """"""
 
         hashed_password = await hash_password(password=password)
 
-        user = UsersModel(
+        user = User(
+            id=uuid4(),
             name=name,
             email=email,
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            deleted_at=None,
             hashed_password=hashed_password,
         )
 
         self.session.add(user)
-        await self.session.commit()
-        await self.session.flush(user)
 
         return user
 
-    async def get_by_id(self, _id: int) -> UsersModel | None:
+    async def get_by_id(self, _id: int) -> User | None:
         """"""
 
-        query = sa.select(UsersModel).where(UsersModel.id == _id)
+        query = sa.select(users_table).where(users_table.c.id == _id)
+        result = await self.session.execute(query)
+        row = result.fetchone()
+        if not row:
+            return None
 
-        return await self.session.scalar(query)
+        return self._map_user(row)
 
-    async def get_by_email(self, email: str) -> UsersModel:
+    async def get_by_email(self, email: str) -> User | None:
         """"""
 
-        query = sa.select(UsersModel).where(UsersModel.email == email)
+        query = sa.select(users_table).where(users_table.c.email == email)
 
-        return await self.session.scalar(query)
+        row = await self.session.scalar(query)
+        if not row:
+            return None
 
-    async def get_all(self, limit: int | None, offset: int | None) -> list[UsersModel]:
+        return self._map_user(row)
+
+    async def get_all(
+        self,
+        limit: int | None,
+        offset: int | None,
+    ):
         """"""
 
-        query = sa.select(UsersModel).limit(limit).offset(offset)
-        results = await self.session.scalars(query)
+        query = sa.select(users_table).limit(limit).offset(offset)
+        results = await self.session.execute(query)
 
-        return list(results.all())
+        return [self._map_user(row) for row in results.fetchall()]
 
     async def update(self, _id: int, values: dict):
         """"""
 
         query = (
-            sa.update(UsersModel)
-            .where(UsersModel.id == _id)
+            sa.update(users_table)
+            .where(users_table.c.id == _id)
             .values(
                 {
                     **values,
-                    UsersModel.updated_at: utcnow(),
+                    users_table.c.updated_at: utcnow(),
                 }
             )
         )
@@ -70,9 +104,9 @@ class UsersGateway:
         """Deletes a user by their id"""
 
         query = (
-            sa.update(UsersModel)
-            .values({UsersModel.deleted_at: utcnow()})
-            .where(UsersModel.id == _id)
+            sa.update(users_table)
+            .values({users_table.c.deleted_at: utcnow()})
+            .where(users_table.c.id == _id)
         )
 
         await self.session.execute(query)
